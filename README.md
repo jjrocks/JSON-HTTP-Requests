@@ -1,5 +1,5 @@
 # JSON Parser
-## By JJ Wanda
+*By JJ Wanda*
 
 ## Goals
 I want anyone to be able to use this library to get parse json data from a website. Only adding one extra method in extending it In order to do so.
