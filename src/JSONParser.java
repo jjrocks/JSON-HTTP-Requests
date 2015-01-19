@@ -24,24 +24,39 @@ import org.json.JSONObject;
 public abstract class JSONParser<T> 
 {
 	
-	private String url; //This is the URL that you need to parse
+	private String baseURL; //This is the URL that you need to parse
 	
 	int id;
 	List<T> mList;
 	private static final String SERVICE_URI = "http://tomcat.cs.lafayette.edu:3200/" ;
 	DefaultHttpClient httpClient = new DefaultHttpClient();
 	
+	/**
+	 * This class implies you're looking for local host.
+	 */
 	public JSONParser()
 	{
-		
+		this.baseURL = "http://localhost";
 	}
 	
-	public JSONParser(String url)
+	/**
+	 * When using this class it is standard that you'll be getting your json info from a base.
+	 * @param url The base url. If you want to get information from google.com use http://google.com and so on.
+	 */
+	public JSONParser(String baseURL)
 	{
-		this.url = url;
+		this.baseURL = baseURL;
 	}
 	
-	public JSONObject readJSONFromUrl(String url) throws MalformedURLException, IOException, JSONException
+	/**
+	 * Reads from a url and returns a single JSON Object.
+	 * @param url The full url to the json object
+	 * @return A JSON Object.
+	 * @throws MalformedURLException If the URL isn't correct this exception occurs
+	 * @throws IOException If IO magically doesn't work
+	 * @throws JSONException
+	 */
+	public static JSONObject readJSONFromUrl(String url) throws MalformedURLException, IOException, JSONException
 	{
 		InputStream is = new URL(url).openStream();
 		try {
@@ -56,7 +71,36 @@ public abstract class JSONParser<T>
 		}
 	}
 	
-	private String readAll(BufferedReader rd) throws IOException 
+	/**
+	 * This class will read a JSON from a url given when instantiating the class.
+	 * If no url is given feel free to give. 
+	 * @return Returns a JSONObject to be used for other parts.
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public JSONObject readJSONFromUrl() throws MalformedURLException, IOException, JSONException
+	{
+		InputStream is = new URL(baseURL).openStream();
+		try {
+			BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+			String jsonText = readAll(rd);
+			JSONObject json = new JSONObject(jsonText);
+			return json;
+		}
+		finally
+		{
+			is.close();
+		}
+	}
+	
+	/**
+	 * This will read all information from a buffered reader and put it into a string.
+	 * @param rd The reader with the information
+	 * @return A string of all information
+	 * @throws IOException If we cannot read from the reader we will throw an exception
+	 */
+	private static String readAll(BufferedReader rd) throws IOException 
 	{
 		StringBuilder sb = new StringBuilder();
 		int cp;
@@ -66,6 +110,27 @@ public abstract class JSONParser<T>
 		}
 		return sb.toString();
 	}
+	
+	/**
+	 * This is the method you need to implement. The JSON Values will be the ones in here.
+	 * This is your chance to do whatever with the json values.
+	 * @param jsonObject
+	 * @return This will return the object you want to instantiate.
+	 * @throws JSONException
+	 */
+	abstract T getJsonValues(JSONObject jsonObject) throws JSONException;
+	
+	/**
+	 * This will get a list of all the json objects. This is used if the the object is in an array.
+	 * @param urlAppendage url containing the json objects.
+	 * @return List of objects after they're converted to whatever you convert them too.
+	 */
+	public List<T> getList(String urlAppendage)
+	{
+		List<T> allList = query(urlAppendage);
+		return allList;
+	}
+
 
 	public List<T> getAll(String message)
 	{
@@ -120,14 +185,6 @@ public abstract class JSONParser<T>
 	}
 	*/
 	
-	public List<T> retrieveObjects2(String message) throws IllegalStateException, IOException
-	{
-		HttpResponse response = setupJsonObject(message);
-		String jsonObject = readMessage(response.getEntity().getContent());
-		return null;
-		
-	}
-	
 	abstract List<T> retrieveObjects(String message) throws ClientProtocolException, IOException, IllegalStateException, JSONException;
 
 	public String readMessage(InputStream instream) throws IOException
@@ -158,8 +215,6 @@ public abstract class JSONParser<T>
 	} 
 	
 	abstract T parseJsonObject(String message) throws JSONException, ClientProtocolException, IOException;
-	
-	abstract T getJsonValues(JSONObject jsonObject) throws JSONException;
 	
 	public HttpResponse setupJsonObject(String message) throws ClientProtocolException, IOException
 	{
