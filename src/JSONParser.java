@@ -6,6 +6,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.net.*;
+import java.nio.charset.Charset;
+
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpDelete;
@@ -20,6 +23,9 @@ import org.json.JSONObject;
 
 public abstract class JSONParser<T> 
 {
+	
+	private String url; //This is the URL that you need to parse
+	
 	int id;
 	List<T> mList;
 	private static final String SERVICE_URI = "http://tomcat.cs.lafayette.edu:3200/" ;
@@ -30,6 +36,37 @@ public abstract class JSONParser<T>
 		
 	}
 	
+	public JSONParser(String url)
+	{
+		this.url = url;
+	}
+	
+	public JSONObject readJSONFromUrl(String url) throws MalformedURLException, IOException, JSONException
+	{
+		InputStream is = new URL(url).openStream();
+		try {
+			BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+			String jsonText = readAll(rd);
+			JSONObject json = new JSONObject(jsonText);
+			return json;
+		}
+		finally
+		{
+			is.close();
+		}
+	}
+	
+	private String readAll(BufferedReader rd) throws IOException 
+	{
+		StringBuilder sb = new StringBuilder();
+		int cp;
+		while((cp = rd.read()) != -1)
+		{
+			sb.append((char) cp);
+		}
+		return sb.toString();
+	}
+
 	public List<T> getAll(String message)
 	{
 		List<T> allList = query(message);
@@ -82,6 +119,14 @@ public abstract class JSONParser<T>
 		return new JSONParser<T>().parseJsonObjects(readMessage(response.getEntity().getContent()));
 	}
 	*/
+	
+	public List<T> retrieveObjects2(String message) throws IllegalStateException, IOException
+	{
+		HttpResponse response = setupJsonObject(message);
+		String jsonObject = readMessage(response.getEntity().getContent());
+		return null;
+		
+	}
 	
 	abstract List<T> retrieveObjects(String message) throws ClientProtocolException, IOException, IllegalStateException, JSONException;
 
