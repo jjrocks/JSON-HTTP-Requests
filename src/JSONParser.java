@@ -9,14 +9,11 @@ import java.util.List;
 import java.net.*;
 import java.nio.charset.Charset;
 
-import org.apache.http.HttpResponse;
-import org.apache.http.client.ClientProtocolException;
+import org.apache.http.*;
 import org.apache.http.client.methods.HttpDelete;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -28,8 +25,6 @@ public abstract class JSONParser<T>
 	
 	int id;
 	List<T> mList;
-	private static final String SERVICE_URI = "http://tomcat.cs.lafayette.edu:3200/" ;
-	DefaultHttpClient httpClient = new DefaultHttpClient();
 	
 	/**
 	 * This class implies you're looking for local host.
@@ -95,6 +90,41 @@ public abstract class JSONParser<T>
 	}
 	
 	/**
+	 * Is exactly like the static function except uses the baseURL instead.
+	 * @return 
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 * @throws JSONException
+	 */
+	public JSONArray readJSONArray() throws MalformedURLException, IOException, JSONException
+	{
+		return readJSONArray(baseURL);
+	}
+	
+	/**
+	 * Takes a url and returns a parsed JSONArray	
+	 * @param urlAppendage
+	 * @return
+	 * @throws JSONException
+	 * @throws IOException
+	 */
+	public static JSONArray readJSONArray(String urlAppendage) throws JSONException, IOException
+	{
+		InputStream is = new URL(urlAppendage).openStream();
+		try
+		{
+			BufferedReader rd = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+			String jsonText = readAll(rd);
+			JSONArray json = new JSONArray(jsonText);
+			return json;
+		}
+		finally
+		{
+			is.close();
+		}
+	}
+	
+	/**
 	 * This will read all information from a buffered reader and put it into a string.
 	 * @param rd The reader with the information
 	 * @return A string of all information
@@ -124,105 +154,40 @@ public abstract class JSONParser<T>
 	 * This will get a list of all the json objects. This is used if the the object is in an array.
 	 * @param urlAppendage url containing the json objects.
 	 * @return List of objects after they're converted to whatever you convert them too.
+	 * @throws JSONException This is thrown if this is an object or possibly not a json object
+	 * @throws IOException 
 	 */
-	public List<T> getList(String urlAppendage)
+	public List<T> getArray(String urlAppendage) throws JSONException, IOException
 	{
-		List<T> allList = query(urlAppendage);
+		List<T> allList = new ArrayList<T>();
+		JSONArray jArray = readJSONArray(urlAppendage);
+		for(int i = 0; i < jArray.length(); i++)
+		{
+			allList.add(getJsonValues(jArray.getJSONObject(i)));
+		}
 		return allList;
 	}
 
-
-	public List<T> getAll(String message)
+	/**
+	 * This will get a single JSON Object and parse it into the specified "T" object.
+	 * @param urlAppendage This is in addition to the base url
+	 * @return Gets specified object.
+	 * @throws MalformedURLException Throws this exception if urlAppendage does not go to a proper url
+	 * @throws IOException
+	 * @throws JSONException The url works but the address does not have a JSON output.
+	 */
+	public T getSingle(String urlAppendage) throws MalformedURLException, IOException, JSONException
 	{
-		List<T> allList = query(message);
-		return allList;
+		JSONObject jsonObject = readJSONFromUrl(baseURL + urlAppendage);
+		T item = this.getJsonValues(jsonObject);
+		return item;
 	}
 	
-	public List<T> query(String query)
+	public boolean postRequest(String urlAppendage, JSONObject object) throws MalformedURLException, IOException
 	{
-		List<T> qList = new ArrayList<T>();
-		try {
-			qList = retrieveObjects(query);
-			mList = qList;
-		} catch (IOException | IllegalStateException | JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return qList;
-	}
-	
-	public T singleQuery(String request, String tableName)
-	{
-		HttpResponse response;
-		T single = null;
-		
-		try {
-			response = setupJsonObject(request);
-			JSONObject jsonObject = new JSONObject(readMessage(response.getEntity().getContent()));
-			//jsonObject = jsonObject.getJSONObject(tableName);
-			single = getJsonValues(jsonObject);
-		} catch (ClientProtocolException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JSONException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return single;
-	}
-	
-	abstract T singleQuery(String request);
-	
-	/*
-	private List<T> retrieveObjects(String message) throws ClientProtocolException, IOException
-	{
-		HttpResponse response = setupJsonObject(message);
-		return new JSONParser<T>().parseJsonObjects(readMessage(response.getEntity().getContent()));
-	}
-	*/
-	
-	abstract List<T> retrieveObjects(String message) throws ClientProtocolException, IOException, IllegalStateException, JSONException;
-
-	public String readMessage(InputStream instream) throws IOException
-	{
-		StringBuilder result = new StringBuilder();
-		BufferedReader r = new BufferedReader(new InputStreamReader(instream));
-		String line;
-		while ((line = r.readLine()) != null)
-		{
-			result.append(line);
-		}
-		instream.close();
-		return result.toString();
-	}
-	
-	public List<T> parseJsonObjects(String message) throws JSONException, ClientProtocolException, IOException
-	{
-		List<T> result = new ArrayList<T>();
-		//JSONObject jsonObject = new JSONObject(message);
-		//JSONArray array = jsonObject.getJSONArray(classString);
-		JSONArray array = new JSONArray(message);
-		for (int i = 0; i < array.length(); i++)
-		{
-			//JSONObject jsonobj = array.getJSONObject(i);
-			result.add(parseJsonObject(array.getJSONObject(i).toString()));
-		}
-		return result;
-	} 
-	
-	abstract T parseJsonObject(String message) throws JSONException, ClientProtocolException, IOException;
-	
-	public HttpResponse setupJsonObject(String message) throws ClientProtocolException, IOException
-	{
-		String uri = SERVICE_URI + message;
-		HttpGet request = new HttpGet(uri);
-		request.addHeader("Accept", "application/json");
-		HttpResponse response = httpClient.execute(request);
-		return response;
+		String url = baseURL + urlAppendage;
+		URLConnection newConnection = new URL(url).openConnection();
+		return false;
 	}
 	
 	public HttpResponse putJsonObject(String message, JSONObject jObject) throws ClientProtocolException, IOException
