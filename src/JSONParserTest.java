@@ -2,7 +2,9 @@ import static org.junit.Assert.*;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.List;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -39,39 +41,65 @@ public class JSONParserTest {
 
 	@Test
 	public void testReadJSONFromUrlString() {
+		JSONObject jObject = null;
 		try {
-			JSONObject jObject = example.readJSONFromUrl("jObject.html");			
-		} catch (JSONException | IOException e) {
-			// TODO Auto-generated catch block
+			jObject = JSONParser.readJSONFromUrl("http://jjwanda.com/jsonTest/jsonObject.html");
+		} 
+		catch (JSONException | IOException e) 
+		{
 			e.printStackTrace();
 			fail();
 		}
+		assertNotNull(jObject);
+		
+	}
+
+
+	@Test
+	public void testReadJSONArrayString() {
+		JSONArray jArray = null;
+		try {
+			jArray = JSONParser.readJSONArray("http://jjwanda.com/jsonTest/jsonArray.html");
+		} 
+		catch (JSONException | IOException e) 
+		{
+			e.printStackTrace();
+			fail();
+		}
+		assertNotNull(jArray);
+	}
+
+	@Test
+	public void testGetArray() 
+	{
+		List<JSONExample> jList = null;
+		try {
+			jList = example.getArray("jsonArray.html");
+		} catch (JSONException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		int expected_size = 3;
+		int actual = jList.size();
+		
+		assertEquals("Array did not contian 3 sizes.",expected_size, actual);
 		
 	}
 
 	@Test
-	public void testReadJSONFromUrl() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testReadJSONArray() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testReadJSONArrayString() {
-		fail("Not yet implemented");
-	}
-
-	@Test
-	public void testGetArray() {
-		fail("Not yet implemented");
-	}
-
-	@Test
 	public void testGetSingle() {
-		fail("Not yet implemented");
+		JSONExample jExample = null;
+		try {
+			jExample = example.getSingle("jsonObject.html");
+		} catch (JSONException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		double expected_double = 21.98;
+		JSONExample expected = new JSONExample(0, "JJ Wanda", true, expected_double);
+		
+		assertEquals("Either the equals method is incorrect or the data wansn't parse properly", 
+				expected, jExample);
 	}
 	
 	/*

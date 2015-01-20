@@ -8,7 +8,6 @@ I want anyone to be able to use this class to get JSON data from a website and a
 
 ## To Do
 
-* Create test functions
 * Add specific static methods if one does not want to extend the class but just use it.
 
 As you can tell I am pretty new to this. Bare with me!

@@ -16,6 +16,15 @@ public class JSONExample extends JSONParser<JSONExample>
 	
 	
 
+	public JSONExample(int id, String name, boolean admin, double cash) 
+	{
+		super();
+		this.id = id;
+		this.name = name;
+		this.admin = admin;
+		this.cash = cash;
+	}
+
 	public JSONExample(String string) 
 	{
 		super(string);
@@ -46,5 +55,63 @@ public class JSONExample extends JSONParser<JSONExample>
 		jObject.put(cashKey, cash);
 		return jObject;
 	}
+	
+	@Override
+	public boolean equals(Object object)
+	{
+		if(object.getClass() != JSONExample.class)
+		{
+			return false;
+		}
+		JSONExample jObject = (JSONExample) object;
+		System.out.println(jObject);
+		System.out.println(this);
+		
+		boolean isEqual = id == jObject.getId() && name.equals(jObject.getName()) &&
+				admin == jObject.isAdmin() && cash == jObject.getCash();
+		
+		return isEqual;
+		
+	}
+
+	public int getId() {
+		return id;
+	}
+
+	public void setId(int id) {
+		this.id = id;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public boolean isAdmin() {
+		return admin;
+	}
+
+	public void setAdmin(boolean admin) {
+		this.admin = admin;
+	}
+
+	public double getCash() {
+		return cash;
+	}
+
+	public void setCash(double cash) {
+		this.cash = cash;
+	}
+
+	@Override
+	public String toString() {
+		return "JSONExample [id=" + id + ", name=" + name + ", admin=" + admin
+				+ ", cash=" + cash + "]";
+	}
+	
+	
 
 }

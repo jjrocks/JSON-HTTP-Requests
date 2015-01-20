@@ -165,7 +165,7 @@ public abstract class JSONParser<T>
 	public List<T> getArray(String urlAppendage) throws JSONException, IOException
 	{
 		List<T> allList = new ArrayList<T>();
-		JSONArray jArray = readJSONArray(urlAppendage);
+		JSONArray jArray = readJSONArray(baseURL + urlAppendage);
 		for(int i = 0; i < jArray.length(); i++)
 		{
 			allList.add(getJsonValues(jArray.getJSONObject(i)));
