@@ -2,7 +2,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,9 +9,14 @@ import java.net.*;
 import java.nio.charset.Charset;
 
 import org.apache.http.*;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpDelete;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.HttpClients;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,6 +29,7 @@ public abstract class JSONParser<T>
 	
 	int id;
 	List<T> mList;
+	
 	
 	/**
 	 * This class implies you're looking for local host.
@@ -183,61 +188,52 @@ public abstract class JSONParser<T>
 		return item;
 	}
 	
-	public boolean postRequest(String urlAppendage, JSONObject object) throws MalformedURLException, IOException
+	public void postRequest(String urlAppendage, JSONObject object) throws MalformedURLException, IOException
 	{
 		String url = baseURL + urlAppendage;
-		URLConnection newConnection = new URL(url).openConnection();
-		return false;
-	}
-	
-	public HttpResponse putJsonObject(String message, JSONObject jObject) throws ClientProtocolException, IOException
-	{
-		String uri = SERVICE_URI + message;
-		HttpPut putRequest = new HttpPut(uri);
-		putRequest.addHeader("Accept", "application/json");
-		putRequest.setHeader("Content-type", "application/json");
-		StringEntity input = null;
-		try {
-			input = new StringEntity(jObject.toString());
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		putRequest.setEntity(input);
-		HttpResponse response = httpClient.execute(putRequest);
-		return response;
+		HttpClient httpClient = HttpClients.createDefault();
+		HttpPost httpPost = new HttpPost(url);
+		httpPost.addHeader("Accept", "application/json");
+		httpPost.setHeader("Content-type", "application/json");
+		StringEntity entity = null;
+		entity = new StringEntity(object.toString());
+		
 		
 	}
 	
-	public HttpResponse deleteRequest(String message) throws ClientProtocolException, IOException
+	public void postRequest(String urlAppendage) throws MalformedURLException, IOException
 	{
-		String uri = SERVICE_URI + message;
+		JSONObject jObject = putJSONObjects();
+		postRequest(urlAppendage, jObject);
+	}
+	
+	public abstract JSONObject putJSONObjects();
+	
+	public void putRequest(String urlAppendage, JSONObject jObject) throws ClientProtocolException, IOException
+	{
+		HttpPut putRequest = new HttpPut(baseURL + urlAppendage);
+		baseRequest(urlAppendage, putRequest, jObject);
+		
+	}
+	
+	private void baseRequest(String urlAppendage, HttpEntityEnclosingRequestBase requestBase, JSONObject jObject) throws ClientProtocolException, IOException
+	{
+		HttpClient httpClient = HttpClients.createDefault();
+		requestBase.addHeader("Accept", "application/json");
+		requestBase.setHeader("Content-type", "application/json");
+		StringEntity entity = new StringEntity(jObject.toString());
+		requestBase.setEntity(entity);
+		httpClient.execute(requestBase);
+	}
+	
+	public HttpResponse deleteRequest(String urlAppendage) throws ClientProtocolException, IOException
+	{
+		String uri = baseURL + urlAppendage;
+		HttpClient httpClient = HttpClients.createDefault();
 		HttpDelete delRequest = new HttpDelete(uri);
 		delRequest.setHeader("Content-type",  "application/json");
 		HttpResponse response = httpClient.execute(delRequest);
 		return response;
 	}
-	
-	public HttpResponse postJsonObject(String message, JSONObject jObject) throws ClientProtocolException, IOException
-	{
-		String uri = SERVICE_URI + message;
-		HttpPost postRequest = new HttpPost(uri);
-		postRequest.addHeader("Accept", "application/json");
-		postRequest.addHeader("Content-type", "application/json");
-		StringEntity input = null;
-		
-		try {
-			input = new StringEntity(jObject.toString());
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		postRequest.setEntity(input);
-		HttpResponse response = httpClient.execute(postRequest);
-		return response;
-	}
-	
-	abstract void putRequest(T object);
-	abstract void postRequest(T object);
 	
 }
