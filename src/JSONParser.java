@@ -259,4 +259,9 @@ public abstract class JSONParser<T>
 		httpClient.execute(delRequest);
 	}
 	
+	public String getBaseURL()
+	{
+		return baseURL;
+	}
+	
 }

@@ -1,28 +1,52 @@
 import static org.junit.Assert.*;
 
+import java.io.IOException;
+import java.net.MalformedURLException;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
 
 public class JSONParserTest {
 
+	JSONExample example;
+	
 	@Before
-	public void setUp() throws Exception {
+	public void setUp() throws Exception 
+	{
+		example = new JSONExample("http://jjwanda.com/jsonTest/");
 	}
 
 	@Test
-	public void testJSONParser() {
-		fail("Not yet implemented");
+	public void testJSONParser() 
+	{
+		example = new JSONExample();
+		String expected = example.getBaseURL();
+		String actual = "http://localhost";
+		assertEquals("Expected to get a blank base", expected, actual);
 	}
 
 	@Test
-	public void testJSONParserString() {
-		fail("Not yet implemented");
+	public void testJSONParserString() 
+	{
+		String expected = "http://jjwanda.com/jsonTest/";
+		example = new JSONExample(expected);	
+		String actual = example.getBaseURL();
+		assertEquals("Expected to get an example url", expected, actual);
 	}
 
 	@Test
 	public void testReadJSONFromUrlString() {
-		fail("Not yet implemented");
+		try {
+			JSONObject jObject = example.readJSONFromUrl("jObject.html");			
+		} catch (JSONException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			fail();
+		}
+		
 	}
 
 	@Test
@@ -49,6 +73,8 @@ public class JSONParserTest {
 	public void testGetSingle() {
 		fail("Not yet implemented");
 	}
+	
+	/*
 
 	@Test
 	public void testPostRequestStringJSONObject() {
@@ -74,5 +100,5 @@ public class JSONParserTest {
 	public void testDeleteRequest() {
 		fail("Not yet implemented");
 	}
-
+	 */
 }
