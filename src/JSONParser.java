@@ -41,7 +41,7 @@ public abstract class JSONParser<T>
 	
 	/**
 	 * When using this class it is standard that you'll be getting your json info from a base.
-	 * @param url The base url. If you want to get information from google.com use http://google.com and so on.
+	 * @param baseURL The base url. If you want to get information from google.com use http://google.com and so on.
 	 */
 	public JSONParser(String baseURL)
 	{
@@ -96,7 +96,7 @@ public abstract class JSONParser<T>
 	
 	/**
 	 * Is exactly like the static function except uses the baseURL instead.
-	 * @return 
+	 * @return Returns the JSO NArray
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 * @throws JSONException
@@ -109,7 +109,7 @@ public abstract class JSONParser<T>
 	/**
 	 * Takes a url and returns a parsed JSONArray	
 	 * @param urlAppendage
-	 * @return
+	 * @return Returns a parsed array
 	 * @throws JSONException
 	 * @throws IOException
 	 */
@@ -184,39 +184,57 @@ public abstract class JSONParser<T>
 	public T getSingle(String urlAppendage) throws MalformedURLException, IOException, JSONException
 	{
 		JSONObject jsonObject = readJSONFromUrl(baseURL + urlAppendage);
-		T item = this.getJsonValues(jsonObject);
+		T item = getJsonValues(jsonObject);
 		return item;
 	}
 	
+	/**
+	 * Use this when wanting to POST data in the form of JSON Object. 
+	 * @param urlAppendage This adds to the baseURL. If you want to go to http://example.com/1 
+	 * Your base URL would be http://example.com/ and your urlAppendage would be 1
+	 * @param object This JSONObject must already have all the elements you want to put in.
+	 * @throws MalformedURLException If the url is incorrect such as http://example.com//1. urlAppendage might give this error
+	 * @throws IOException
+	 */
 	public void postRequest(String urlAppendage, JSONObject object) throws MalformedURLException, IOException
 	{
 		String url = baseURL + urlAppendage;
-		HttpClient httpClient = HttpClients.createDefault();
 		HttpPost httpPost = new HttpPost(url);
-		httpPost.addHeader("Accept", "application/json");
-		httpPost.setHeader("Content-type", "application/json");
-		StringEntity entity = null;
-		entity = new StringEntity(object.toString());
-		
-		
+		baseRequest(httpPost, object);		
 	}
 	
+	/**
+	 * For POST data. It will take the url and convert this class into a JSON object using the putJSONObjects method. This should only be used if the extended class can transform JSON objects.
+	 * @param urlAppendage This will add to the base URL
+	 * @throws MalformedURLException The URL is incorrect.
+	 * @throws IOException
+	 */
 	public void postRequest(String urlAppendage) throws MalformedURLException, IOException
 	{
 		JSONObject jObject = putJSONObjects();
 		postRequest(urlAppendage, jObject);
 	}
 	
+	/**
+	 * This method will take the classes existing data structures and turn them into an array. Used for put and post requests.
+	 * Usually to do this the following code is created
+	 * <code>
+	 * JSONObject jsonObject = new JSONObject();
+	 * jsonObject.put("Key", "Value");
+	 * return jsonObject;
+	 * </code>
+	 * @return Returns a JSONObject with all key value pairs.
+	 */
 	public abstract JSONObject putJSONObjects();
 	
 	public void putRequest(String urlAppendage, JSONObject jObject) throws ClientProtocolException, IOException
 	{
 		HttpPut putRequest = new HttpPut(baseURL + urlAppendage);
-		baseRequest(urlAppendage, putRequest, jObject);
+		baseRequest(putRequest, jObject);
 		
 	}
 	
-	private void baseRequest(String urlAppendage, HttpEntityEnclosingRequestBase requestBase, JSONObject jObject) throws ClientProtocolException, IOException
+	private void baseRequest(HttpEntityEnclosingRequestBase requestBase, JSONObject jObject) throws ClientProtocolException, IOException
 	{
 		HttpClient httpClient = HttpClients.createDefault();
 		requestBase.addHeader("Accept", "application/json");
@@ -226,14 +244,19 @@ public abstract class JSONParser<T>
 		httpClient.execute(requestBase);
 	}
 	
-	public HttpResponse deleteRequest(String urlAppendage) throws ClientProtocolException, IOException
+	/**
+	 * Uses a HTTP DELETE command to delete whatever is pointed at the URL.
+	 * @param urlAppendage This will tack on to the base url and is where the delete command will be pointed
+	 * @throws ClientProtocolException
+	 * @throws IOException
+	 */
+	public void deleteRequest(String urlAppendage) throws ClientProtocolException, IOException
 	{
 		String uri = baseURL + urlAppendage;
 		HttpClient httpClient = HttpClients.createDefault();
 		HttpDelete delRequest = new HttpDelete(uri);
 		delRequest.setHeader("Content-type",  "application/json");
-		HttpResponse response = httpClient.execute(delRequest);
-		return response;
+		httpClient.execute(delRequest);
 	}
 	
 }
